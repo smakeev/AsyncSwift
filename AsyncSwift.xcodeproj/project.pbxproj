@@ -30,7 +30,7 @@
 		B6465EA523933DBC004A83FA /* AsyncAwait.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AsyncAwait.swift; path = Source/AsyncAwait.swift; sourceTree = SOURCE_ROOT; };
 		B6465EA623933DBC004A83FA /* AsyncFuture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AsyncFuture.swift; path = Source/AsyncFuture.swift; sourceTree = SOURCE_ROOT; };
 		B6465EAC23933F3F004A83FA /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = SOURCE_ROOT; };
-		B6465EAD23933F3F004A83FA /* AsyncSwift.podspec */ = {isa = PBXFileReference; lastKnownFileType = file; path = AsyncSwift.podspec; sourceTree = SOURCE_ROOT; };
+		B6465EAD23933F3F004A83FA /* SomeAsyncSwift.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = SomeAsyncSwift.podspec; sourceTree = SOURCE_ROOT; };
 		B6465EAE23933F3F004A83FA /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		B67C4973238076B9004A5F75 /* AsyncSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AsyncSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B67C4976238076B9004A5F75 /* AsyncSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AsyncSwift.h; sourceTree = "<group>"; };
@@ -62,7 +62,7 @@
 		B6465EAB23933F26004A83FA /* resources */ = {
 			isa = PBXGroup;
 			children = (
-				B6465EAD23933F3F004A83FA /* AsyncSwift.podspec */,
+				B6465EAD23933F3F004A83FA /* SomeAsyncSwift.podspec */,
 				B6465EAC23933F3F004A83FA /* LICENSE */,
 				B6465EAE23933F3F004A83FA /* README.md */,
 			);
