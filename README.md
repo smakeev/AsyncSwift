@@ -42,18 +42,18 @@ Exactly error could be found in ```Error``` property. It has an ```Any?``` type 
 
 
 # Examples:
-  ```swift
+```swift
     let future1 = SomeFuture.delay(3)
-  ```
+```
   Here ```future1``` is a ```AsyncAwaitFuture<Void>``` and it will be resolved after 3 seconds.
   
   ```swift
-  		let future2: AFuture<Int> = async {
-			for _ in 1...1000000 {
-				//do something
-			}
-			return 10 //resolve with 10
+  	let future2: AFuture<Int> = async {
+		for _ in 1...1000000 {
+			//do something
 		}
+		return 10 //resolve with 10
+	}
   ```
   
   The special constraction ```async``` returns a future. Will be described in details later.
@@ -84,22 +84,22 @@ Exactly error could be found in ```Error``` property. It has an ```Any?``` type 
   
   ```swift
   func f0() -> AFuture<Int> {
-		async {
-			sleep(2) //to imitate some work in BG.
-			return 1
-		}
+	async {
+		sleep(2) //to imitate some work in BG.
+		return 1
 	}
+}
   ```
   
   This function could have parameters:
   
   ```swift
-    	func f1(_ a: Int) -> AFuture<Int> {
-		   async {
-			  sleep(2)
-			  return a
-		  }
-	}
+    func f1(_ a: Int) -> AFuture<Int> {
+    	async {
+		sleep(2)
+		return a
+       }
+    }
   ```
   For such functions you may directly use ```await``` to make your code wait future to be resolved
   ```swift
@@ -112,33 +112,32 @@ Exactly error could be found in ```Error``` property. It has an ```Any?``` type 
   ```onSuccess``` method. It will be called after the future been resolved.
   If call ```onSuccess``` to resolved future, it will be called immediately.
   
-  ```swift
-  		future.onResolved { result in
-			print(" Future resolved with:\(result)")
-		}
-  ```
+```swift
+ future.onResolved { result in
+	print(" Future resolved with:\(result)")
+}
+```
   
   ```then``` is close to ```onSuccess``` but returns the future wich waits for first future been resolved.
   This allows you to create future's chain
   Then has an argument of type which it will embade to it's future.
   
-  ```swift
- 		let future = findEntryPoint().then(EntryPoint.self) { entryPoint in
-			guard let validEntryPoint = entryPoint else { fatalError()}
-			return self.runFromEnryPoint(validEntryPoint)
-		}.then(Void.self, finishChainWithOptinalParameter)
- ```
+```swift
+let future = findEntryPoint().then(EntryPoint.self) { entryPoint in
+	guard let validEntryPoint = entryPoint else { fatalError()}
+	return self.runFromEnryPoint(validEntryPoint)
+}.then(Void.self, finishChainWithOptinalParameter)
+```
  In this example all functions return future objects, so are async functions.
  
  ```always``` is close to ```onSuccess``` but also works in case of errors. 
  
  The last example could be recreated with ```async await``` constractions
- 
- ```swift
+```swift
  	  let entryPoint = await(findEntryPoint())
 		guard let validEntryPoint = entryPoint else { fatalError() /*to test exceptions*/}
 		let result = await(self.runFromEnryPoint(validEntryPoint))
- ```
+```
  
  If you don't whant your thread to be waiting in ```await``` make sure you call it inside ```async```
  ```async``` will return future you may subscribe on.
