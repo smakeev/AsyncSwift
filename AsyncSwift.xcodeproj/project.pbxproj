@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B6465EA723933DBC004A83FA /* AsyncAwait.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA523933DBC004A83FA /* AsyncAwait.swift */; };
+		B6465EA823933DBC004A83FA /* AsyncAwait.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA523933DBC004A83FA /* AsyncAwait.swift */; };
+		B6465EA923933DBC004A83FA /* AsyncFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA623933DBC004A83FA /* AsyncFuture.swift */; };
+		B6465EAA23933DBC004A83FA /* AsyncFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA623933DBC004A83FA /* AsyncFuture.swift */; };
 		B67C497D238076B9004A5F75 /* AsyncSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B67C4973238076B9004A5F75 /* AsyncSwift.framework */; };
 		B67C4982238076B9004A5F75 /* AsyncSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67C4981238076B9004A5F75 /* AsyncSwiftTests.swift */; };
 		B67C4984238076B9004A5F75 /* AsyncSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = B67C4976238076B9004A5F75 /* AsyncSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B6B1A61323932D1B00FA734C /* AsyncAwait.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B1A61223932D1B00FA734C /* AsyncAwait.swift */; };
-		B6B1A61423932D1B00FA734C /* AsyncAwait.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B1A61223932D1B00FA734C /* AsyncAwait.swift */; };
-		B6B1A61623932D3C00FA734C /* AsyncFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B1A61523932D3C00FA734C /* AsyncFuture.swift */; };
-		B6B1A61723932D3C00FA734C /* AsyncFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B1A61523932D3C00FA734C /* AsyncFuture.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,14 +27,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B6465EA523933DBC004A83FA /* AsyncAwait.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AsyncAwait.swift; path = Source/AsyncAwait.swift; sourceTree = SOURCE_ROOT; };
+		B6465EA623933DBC004A83FA /* AsyncFuture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AsyncFuture.swift; path = Source/AsyncFuture.swift; sourceTree = SOURCE_ROOT; };
 		B67C4973238076B9004A5F75 /* AsyncSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AsyncSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B67C4976238076B9004A5F75 /* AsyncSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AsyncSwift.h; sourceTree = "<group>"; };
 		B67C4977238076B9004A5F75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B67C497C238076B9004A5F75 /* AsyncSwiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AsyncSwiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B67C4981238076B9004A5F75 /* AsyncSwiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncSwiftTests.swift; sourceTree = "<group>"; };
 		B67C4983238076B9004A5F75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		B6B1A61223932D1B00FA734C /* AsyncAwait.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncAwait.swift; sourceTree = "<group>"; };
-		B6B1A61523932D3C00FA734C /* AsyncFuture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncFuture.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,8 +78,8 @@
 			isa = PBXGroup;
 			children = (
 				B67C4976238076B9004A5F75 /* AsyncSwift.h */,
-				B6B1A61223932D1B00FA734C /* AsyncAwait.swift */,
-				B6B1A61523932D3C00FA734C /* AsyncFuture.swift */,
+				B6465EA523933DBC004A83FA /* AsyncAwait.swift */,
+				B6465EA623933DBC004A83FA /* AsyncFuture.swift */,
 				B67C4977238076B9004A5F75 /* Info.plist */,
 			);
 			path = AsyncSwift;
@@ -204,8 +204,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B6B1A61323932D1B00FA734C /* AsyncAwait.swift in Sources */,
-				B6B1A61623932D3C00FA734C /* AsyncFuture.swift in Sources */,
+				B6465EA723933DBC004A83FA /* AsyncAwait.swift in Sources */,
+				B6465EA923933DBC004A83FA /* AsyncFuture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -214,8 +214,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				B67C4982238076B9004A5F75 /* AsyncSwiftTests.swift in Sources */,
-				B6B1A61423932D1B00FA734C /* AsyncAwait.swift in Sources */,
-				B6B1A61723932D3C00FA734C /* AsyncFuture.swift in Sources */,
+				B6465EA823933DBC004A83FA /* AsyncAwait.swift in Sources */,
+				B6465EAA23933DBC004A83FA /* AsyncFuture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
