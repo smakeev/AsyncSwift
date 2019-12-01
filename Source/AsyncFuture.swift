@@ -12,14 +12,16 @@ public typealias AFuture = AsyncAwaitFuture
 public typealias SomeFuture = AFuture<Void>
 
 public protocol FutureAlwaysProtocol {
-	func always(_ handler: @escaping () -> Void)
+	@discardableResult func always(_ handler: @escaping () -> Void) -> Self
 }
 
 internal protocol Resolvable: class {
 
 	var isResolved: Bool { get }
 	func resolveWith(_ result: Any?)
+	func resolveWithError(_ error: Any?)
 	func resolveFromSubFuture(_ result: Any?)
+	func resolveFromSubFutureWithError(_ error: Any?)
 }
 
 internal func waitForFutures<Type>(_ futures: [AsyncAwaitFuture<Type>], handler: (() -> Void)? = nil) {
@@ -53,7 +55,15 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 		fatalError("This is only for subclass")
 	}
 	
+	func resolveWithError(_ error: Any?) {
+		fatalError("This is only for subclass")
+	}
+	
 	func resolveFromSubFuture(_ result: Any?) {
+		fatalError("This is only for subclass")
+	}
+	
+	func resolveFromSubFutureWithError(_ error: Any?) {
 		fatalError("This is only for subclass")
 	}
 	
@@ -95,11 +105,23 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 		return future
 	}
 
-	
-	var _onResolved: [((Type?) -> Void)] = Array.init()
-	@discardableResult public func onResolved(_ block: @escaping (Type?) -> Void) -> AsyncAwaitFuture<Type> {
+
+	var _onError: [((Any?) -> Void)] = Array.init()
+	@discardableResult public func onError(_ block: @escaping (Any?) -> Void) -> AsyncAwaitFuture<Type> {
 		syncQueue.sync {
-			_onResolved.append(block)
+			_onError.append(block)
+			if resolved {
+				doNotifications()
+			}
+		}
+		
+		return self
+	}
+	
+	var _onSuccess: [((Type?) -> Void)] = Array.init()
+	@discardableResult public func onSuccess(_ block: @escaping (Type?) -> Void) -> AsyncAwaitFuture<Type> {
+		syncQueue.sync {
+			_onSuccess.append(block)
 			if resolved {
 				doNotifications()
 			}
@@ -129,10 +151,15 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 				future = block(nil)
 			}
 			future?._dependantFutures.append(contentsOf: self._dependantFutures)
-			future?._onResolved.append(contentsOf: self._onResolved)
+			future?._onSuccess.append(contentsOf: self._onSuccess)
 			future?._superOwner = self
 			self._dependantFutures = [Resolvable]()
-			self._onResolved = [((Type?) -> Void)]()
+			self._onSuccess = [((Type?) -> Void)]()
+			owner = nil
+		}
+		
+		override func resolveWithError(_ error: Any?) {
+			self.error = error
 			owner = nil
 		}
 		
@@ -143,6 +170,14 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 					_result  = validResult
 				}
 				resolved = true
+			}
+		}
+		
+		override func resolveFromSubFutureWithError(_ error: Any?) {
+			syncQueue.sync {
+				_error   = error
+				resolved = true
+				hasError = true
 			}
 		}
 	}
@@ -172,14 +207,29 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 		return future
 	}
 	
+	internal var dependantErrorFutures: [AFuture<Type>] = [AFuture<Type>] ()
+	internal var dependantErrorFuturesHandlers: [(Any?) throws -> Type] = [(Any?) throws -> Type]()
+	public func catchError(_ block: @escaping (Any?) throws -> Type) -> AFuture<Type> {
+		let future = AFuture<Type>(self.queue)
+		syncQueue.sync {
+			dependantErrorFutures.append(future)
+			dependantErrorFuturesHandlers.append(block)
+			if resolved {
+				doNotifications()
+			}
+		}
+		return future
+	}
+	
 	var alwaysDo: [()->Void] = [()->Void]()
-	public func always(_ handler: @escaping () -> Void) {
+	@discardableResult public func always(_ handler: @escaping () -> Void) -> Self {
 		syncQueue.sync {
 			alwaysDo.append(handler)
 			if resolved {
 				doNotifications()
 			}
 		}
+		return self
 	}
 
 	private var syncQueue: DispatchQueue = DispatchQueue(label: "AsyncAwaitFutureSyncQueue")
@@ -187,19 +237,57 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 	internal var _result: Type? = nil
 	
 	private func doNotifications() {
-		for notifBlock in self._onResolved {
-			queue.async {
-				notifBlock (self._result)
+	
+		if !_hasError {
+			for notifBlock in self._onSuccess {
+				queue.async {
+					notifBlock (self._result)
+				}
+			}
+		} else {
+			for notifBlock in self._onError {
+				queue.async {
+					notifBlock (self._error)
+				}
 			}
 		}
-		self._onResolved.removeAll()
+		self._onSuccess.removeAll()
+		self._onError.removeAll()
 		
-		for dependantFuture in self._dependantFutures {
-			queue.async {
-				dependantFuture.resolveWith(self._result)
+		if !_hasError {
+			for dependantFuture in self._dependantFutures {
+				queue.async {
+					dependantFuture.resolveWith(self._result)
+				}
 			}
+		} else {
+			for dependantFuture in self._dependantFutures {
+				queue.async {
+					dependantFuture.resolveWithError(self._error)
+				}
+		}
+
 		}
 		self._dependantFutures.removeAll()
+		
+		if !_hasError {
+			for errorCatcherFuture in dependantErrorFutures {
+				errorCatcherFuture.result = _result
+			}
+		} else {
+			var currentIndex = 0
+			for errorCatcherFuture in dependantErrorFutures {
+				do {
+					errorCatcherFuture.result = try dependantErrorFuturesHandlers[currentIndex](_error)
+				}
+				catch {
+					errorCatcherFuture.error = error
+				}
+				currentIndex += 1
+			}
+		}
+		dependantErrorFuturesHandlers.removeAll()
+		dependantErrorFutures.removeAll()
 		
 		for always in self.alwaysDo {
 			queue.async {
@@ -207,6 +295,41 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 			}
 		}
 		self.alwaysDo.removeAll()
+	}
+	
+	var _hasError: Bool = false
+	public internal(set) var hasError: Bool {
+		get {
+			syncQueue.sync {
+				return _hasError
+			}
+		}
+		
+		set {
+			syncQueue.sync {
+				guard resolved == false else { return }
+				_hasError = newValue
+			}
+		}
+	}
+	var _error: Any? = nil
+	public internal(set) var error: Any? {
+		get {
+			syncQueue.sync {
+				return _error
+			}
+		}
+
+		set {
+			syncQueue.sync {
+				guard resolved == false else { return }
+				_error = newValue
+				_hasError = true
+				resolved = true
+				doNotifications()
+				_superOwner?.resolveFromSubFutureWithError(_error)
+			}
+		}
 	}
 	
 	public internal (set) var result: Type? {
@@ -218,6 +341,7 @@ public class AsyncAwaitFuture<Type>: Resolvable, FutureAlwaysProtocol {
 		
 		set {
 			syncQueue.sync {
+				guard resolved == false else { return }
 				_result = newValue
 				resolved = true
 				doNotifications()
