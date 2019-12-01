@@ -3,8 +3,8 @@
 Framework for async tasks in Swift using futures and async-await syntax.
 
 ## How to use:
-1) Get the source directly.
-2) Cocoa pods
+1) You may get the source directly.
+2) Using cocoa pods
 	```
 	pod "SomeAsyncSwift"	
 	```
@@ -31,11 +31,15 @@ For simplicity ```AsyncAwaitFuture``` has a simple name ```AFuture```
 
 Future is an instance of ```AFuture``` class with some result type.
 A future represents the result of an asynchronous operation, and can have two states: ```resolved == true``` , ```resolved == false```
+Also it provides substate ```hasError``` due to future could be resolved not only with success but also woth error.
 
 In case of resolved future can provide the result.
 ```result``` property is a read only property of generic type, and it can be nil.
-Futurw could be resolved with ```nil``` result. 
+Future could be resolved with ```nil``` result. This does not mean somthing is wrong. 
 So to determine if future is resolved you should check ```resolved``` property.
+In case of error ```resolved``` property shows ```true``` but also ```hasError``` property shows ```true```
+Exactly error could be found in ```Error``` property. It has an ```Any?``` type and could be nil.
+
 
 # Examples:
   ```swift
@@ -97,20 +101,24 @@ So to determine if future is resolved you should check ```resolved``` property.
 		  }
 	}
   ```
+  For such functions you may directly use ```await``` to make your code wait future to be resolved
+  ```swift
+	let result = await(f1(5))
+  ```
   
   You may use functions to obtain futures and observe it's states.
   To bserve future states you may use several ways:
   
-  ```onResolved``` method. It will be called after the future been resolved.
-  If call ```onResolved``` to resolved future, it will be called immediately.
+  ```onSuccess``` method. It will be called after the future been resolved.
+  If call ```onSuccess``` to resolved future, it will be called immediately.
   
   ```swift
   		future.onResolved { result in
-        print(" Future resolved with:\(result)")
+			print(" Future resolved with:\(result)")
 		}
   ```
   
-  ```then``` is close to ```onResolved``` but returns the future wich waits for first future been resolved.
+  ```then``` is close to ```onSuccess``` but returns the future wich waits for first future been resolved.
   This allows you to create future's chain
   Then has an argument of type which it will embade to it's future.
   
@@ -120,17 +128,19 @@ So to determine if future is resolved you should check ```resolved``` property.
 			return self.runFromEnryPoint(validEntryPoint)
 		}.then(Void.self, finishChainWithOptinalParameter)
  ```
- ```always``` is close to ```onResolved``` but also works in case of errors. Will be added in future releases.
+ In this example all functions return future objects, so are async functions.
+ 
+ ```always``` is close to ```onSuccess``` but also works in case of errors. 
  
  The last example could be recreated with ```async await``` constractions
  
  ```swift
  	  let entryPoint = await(findEntryPoint())
 		guard let validEntryPoint = entryPoint else { fatalError() /*to test exceptions*/}
-		let result = await(validEntryPoint, self.runFromEnryPoint)
+		let result = await(self.runFromEnryPoint(validEntryPoint))
  ```
  
- If you don't whant your thread to be waiting in ```await``` make sure you call it insude ```async```
+ If you don't whant your thread to be waiting in ```await``` make sure you call it inside ```async```
  ```async``` will return future you may subscribe on.
  
  
@@ -139,7 +149,143 @@ So to determine if future is resolved you should check ```resolved``` property.
  
 # ```await```
 
-```await``` is a function wich takes arguments (from 0 up to 10)* and a function returning ```AFuture```
+```await``` is a function wich makes your current thread be waiting for future been resolbed. 
 
+In case of using functions not returning future you may use ```await``` variants which takes arguments and function.
+it takes arguments (from 0 up to 10)* and a function not returning ```AFuture``` and produces an ```AFuture<Type>``` where ```Type``` is your function return type.
+ 
 * if you need more then 10 arguments you need create ```await``` yourself.
+ 
+ # Handling errors:
+ 
+ ## How to produce error:
+Future can produce an error in case of it's async function throws an exception
+	
+	```swift
+	let future: AFuture<Int> = async {
+		for i in 1...1000000 {
+			if i == 10000 {
+				throw(TestErrors.testExcepton(howMany: i))
+			}
+		}
+		return 10
+	}
+	```  
+In this example future will not return 10. Instead it will have an error of type ```TestErrors```
+Here is error type:
+	```swift
+		enum TestErrors: Error {
+			case testExcepton(howMany: Int)
+		}
+
+	```
   
+## How to handle errors in future:
+
+Take a look at this example:
+
+```swift
+func testException() {
+	let future: AFuture<Int> = async {
+		for i in 1...1000000 {
+			if i == 10000 {
+				throw(TestErrors.testExcepton(howMany: i))
+			}
+		}
+		return 10
+	}
+	
+	await(SomeFuture.wait([future]))
+	XCTAssert(future.resolved)
+	XCTAssert(future.hasError)
+	let error = future.error
+	if let validError = error as? TestErrors {
+		switch validError {
+		case .testExcepton(let howMany): XCTAssert(howMany == 10000)
+		}
+	} else {
+		XCTAssert(false)
+	}
+}
+```
+So as you can see ```SomeFuture.wait([future])``` works as if future has been resolved with value.
+But it will have an error instead.
+
+You also may use ```onError``` handler.
+It works in the same way as ```onSuccess``` but in case of error.
+
+If you want to fix the problem use ```catchError```
+
+Example of future chaining:
+```swift
+func testChain() {
+	var gotThenBlock = false
+	var wasInThen    = false
+	var wasInAlways  = false
+	let future: AFuture<String> = async { () -> Int in
+		for i in 1...1000000 {
+			if i == 10000 {
+				throw(TestErrors.testExcepton(howMany: i))
+			}
+		}
+		return 10
+	}.then(String.self) { result in
+		gotThenBlock = true
+		return async {
+			wasInThen = true
+			return "Ten"
+		}
+	}.catchError { _ in
+		return "10000"
+	}.always {
+		wasInAlways = true
+	}
+
+	let result = await(future)
+	XCTAssert(result == "10000")
+	XCTAssert(wasInAlways)
+	XCTAssert(!gotThenBlock)
+	XCTAssert(!wasInThen)
+}
+```
+
+In this test we have the first future provides ```Int``` result and next future provides ```String```
+But the first future provides an error. We catch it by ```catchError``` and provides fixed value here.
+Note: ```catchError``` is a new future itself. It means it also could have ```then``` and could provides error.
+So you could have several ```catchError```s one after another. 
+
+```Always``` will be called in any case.
+
+## Handling errors in ```await```
+
+Due to ```await``` takes ```AFuture``` you may produce ```catchError``` to the future
+
+```swift
+func testExceptionsInAwait() {
+	let future: AFuture<Int> = async {
+		for i in 1...1000000 {
+			if i == 10000 {
+				throw(TestErrors.testExcepton(howMany: i))
+			}
+		}
+		return 10
+	}
+	let result = await(future.catchError { error in
+		if let validError = error as? TestErrors {
+			switch validError {
+			case .testExcepton(let howMany): XCTAssert(howMany == 10000)
+			}
+		} else {
+			XCTAssert(false)
+		}
+		
+		return 20
+	})
+	
+	XCTAssert(result == 20)
+}
+```
+
+If you use ```await``` to function wich does not provide future you don't have such oportunity. 
+
+
