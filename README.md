@@ -123,5 +123,9 @@ So to determine if future is resolved you should check ```resolved``` property.
  ## note: future does not keep ref. to itself. It means you should always keep ref.to future before it finished it's work.
  
  
+# ```await```
 
+```await``` is a function wich takes arguments (from 0 up to 10)* and a function returning ```AFuture```
+
+* if you need more then 10 arguments you need create ```await``` yourself.
   
