@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'SomeAsyncSwift'
-  s.version = '0.2.1'
+  s.version = '0.2.2'
   s.license = 'MIT'
   s.summary = 'Async operations via Async Await and more'
   s.homepage = 'https://github.com/smakeev/AsyncSwift'
