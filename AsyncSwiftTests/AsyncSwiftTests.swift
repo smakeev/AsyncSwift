@@ -47,7 +47,7 @@ class AsyncSwiftTests: XCTestCase {
 	}
 
 	func f4(f1: Int, f2: Int, f3: Int, f4: Int) -> AFuture<Int> {
-		return async {
+		async {
 			sleep(2)
 			return f1 + f2 + f3 + f4
 		}
@@ -217,6 +217,12 @@ class AsyncSwiftTests: XCTestCase {
 		XCTAssert(future.result!.current == 2)
 	}
 
+	func testAsyncAwait() {
+		let entryPoint = await(findEntryPoint())
+		guard let validEntryPoint = entryPoint else { fatalError() /*to test exceptions*/}
+		let result = await(validEntryPoint, self.runFromEnryPoint)
+		XCTAssert(result!.current == 2)
+	}
 
 	func testExample() {
 		let a: AFuture<Int> = async {
