@@ -1,4 +1,18 @@
 # AsyncSwift
+
+Framework for async tasks in Swift using futures and async-await syntax.
+
+## How to use:
+1) Get the source directly.
+2) Cocoa pods
+	```
+	pod "SomeAsyncSwift"	
+	```
+	and in your swift files:
+	```swift
+	import SomeAsyncSwift
+	```
+
 ## Asynchronous programming: futures, async, await
 
 Asynchronous operations let your program complete work while waiting for another operation to finish. Here are some common asynchronous operations:
