@@ -161,24 +161,23 @@ it takes arguments (from 0 up to 10)* and a function not returning ```AFuture```
  ## How to produce error:
 Future can produce an error in case of it's async function throws an exception
 	
-	```swift
-	let future: AFuture<Int> = async {
-		for i in 1...1000000 {
-			if i == 10000 {
-				throw(TestErrors.testExcepton(howMany: i))
-			}
+```swift
+let future: AFuture<Int> = async {
+	for i in 1...1000000 {
+		if i == 10000 {
+			throw(TestErrors.testExcepton(howMany: i))
 		}
-		return 10
 	}
-	```  
+	return 10
+}
+```  
 In this example future will not return 10. Instead it will have an error of type ```TestErrors```
 Here is error type:
-	```swift
-		enum TestErrors: Error {
-			case testExcepton(howMany: Int)
-		}
-
-	```
+```swift
+	enum TestErrors: Error {
+		case testExcepton(howMany: Int)
+	}
+```
   
 ## How to handle errors in future:
 
