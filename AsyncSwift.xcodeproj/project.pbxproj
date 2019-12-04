@@ -11,8 +11,11 @@
 		B6465EA823933DBC004A83FA /* AsyncAwait.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA523933DBC004A83FA /* AsyncAwait.swift */; };
 		B6465EA923933DBC004A83FA /* AsyncFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA623933DBC004A83FA /* AsyncFuture.swift */; };
 		B6465EAA23933DBC004A83FA /* AsyncFuture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6465EA623933DBC004A83FA /* AsyncFuture.swift */; };
+		B66B6DD32397D08F009E6962 /* StreamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66B6DD22397D08F009E6962 /* StreamTests.swift */; };
+		B66B6DD52397D0E0009E6962 /* AsyncStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66B6DD42397D0E0009E6962 /* AsyncStream.swift */; };
+		B66B6DD62397D0E0009E6962 /* AsyncStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66B6DD42397D0E0009E6962 /* AsyncStream.swift */; };
+		B66C3106239856C300E92740 /* AsyncSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67C4981238076B9004A5F75 /* AsyncSwiftTests.swift */; };
 		B67C497D238076B9004A5F75 /* AsyncSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B67C4973238076B9004A5F75 /* AsyncSwift.framework */; };
-		B67C4982238076B9004A5F75 /* AsyncSwiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67C4981238076B9004A5F75 /* AsyncSwiftTests.swift */; };
 		B67C4984238076B9004A5F75 /* AsyncSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = B67C4976238076B9004A5F75 /* AsyncSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
@@ -32,6 +35,8 @@
 		B6465EAC23933F3F004A83FA /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = SOURCE_ROOT; };
 		B6465EAD23933F3F004A83FA /* SomeAsyncSwift.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = SomeAsyncSwift.podspec; sourceTree = SOURCE_ROOT; };
 		B6465EAE23933F3F004A83FA /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		B66B6DD22397D08F009E6962 /* StreamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamTests.swift; sourceTree = "<group>"; };
+		B66B6DD42397D0E0009E6962 /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
 		B67C4973238076B9004A5F75 /* AsyncSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AsyncSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B67C4976238076B9004A5F75 /* AsyncSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AsyncSwift.h; sourceTree = "<group>"; };
 		B67C4977238076B9004A5F75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -92,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				B67C4976238076B9004A5F75 /* AsyncSwift.h */,
+				B66B6DD42397D0E0009E6962 /* AsyncStream.swift */,
 				B6465EA523933DBC004A83FA /* AsyncAwait.swift */,
 				B6465EA623933DBC004A83FA /* AsyncFuture.swift */,
 				B67C4977238076B9004A5F75 /* Info.plist */,
@@ -102,6 +108,7 @@
 		B67C4980238076B9004A5F75 /* AsyncSwiftTests */ = {
 			isa = PBXGroup;
 			children = (
+				B66B6DD22397D08F009E6962 /* StreamTests.swift */,
 				B67C4981238076B9004A5F75 /* AsyncSwiftTests.swift */,
 				B67C4983238076B9004A5F75 /* Info.plist */,
 			);
@@ -220,6 +227,7 @@
 			files = (
 				B6465EA723933DBC004A83FA /* AsyncAwait.swift in Sources */,
 				B6465EA923933DBC004A83FA /* AsyncFuture.swift in Sources */,
+				B66B6DD52397D0E0009E6962 /* AsyncStream.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,9 +235,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B67C4982238076B9004A5F75 /* AsyncSwiftTests.swift in Sources */,
 				B6465EA823933DBC004A83FA /* AsyncAwait.swift in Sources */,
+				B66C3106239856C300E92740 /* AsyncSwiftTests.swift in Sources */,
 				B6465EAA23933DBC004A83FA /* AsyncFuture.swift in Sources */,
+				B66B6DD32397D08F009E6962 /* StreamTests.swift in Sources */,
+				B66B6DD62397D0E0009E6962 /* AsyncStream.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

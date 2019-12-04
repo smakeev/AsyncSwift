@@ -24,7 +24,7 @@ internal protocol Resolvable: class {
 	func resolveFromSubFutureWithError(_ error: Any?)
 }
 
-internal func waitForFutures<Type>(_ futures: [AsyncAwaitFuture<Type>], handler: (() -> Void)? = nil) {
+internal func waitForFutures<Type>(_ futures: [AsyncAwaitFuture<Type>]) {
 	var finished = 0
 	var sleeping = true
 	let condition = NSCondition()

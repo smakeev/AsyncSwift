@@ -23,6 +23,12 @@ public func async<Type>(_ block: @escaping () throws -> Type) -> AsyncAwaitFutur
 }
 		
 
+public func asyncStream<Type>(_ block: @escaping ((Type) throws -> Void) throws -> Void) -> AsyncStream<Type> {
+	let stream = MutableAsyncStream<Type>()
+	stream.addBody(block)
+	return stream
+}
+
 
 
 public func await<Result>(_ future: AsyncAwaitFuture<Result>) -> Result? {
