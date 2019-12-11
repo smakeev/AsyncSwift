@@ -26,6 +26,15 @@ public class AsyncStream<Type> {
 		}
 	}
 	
+	private var _error: Error? = nil
+	public var error: Error? {
+		get {
+			return syncQueue.sync {
+				return _error
+			}
+		}
+	}
+	
 	private var _onError: [(Error) -> Void] = [(Error) -> Void]()
 	private var _onErrorOnce: [(Error) -> Void] = [(Error) -> Void]()
 	@discardableResult public func onError(_ handler: @escaping (Error) -> Void) -> AsyncStream<Type> {
@@ -42,37 +51,20 @@ public class AsyncStream<Type> {
 	}
 
 
-	private var _onValue: [(Type) -> Void] = [(Type) -> Void]()
-	private var _onValueOnce: [(Type) -> Void] = [(Type) -> Void]()
-	@discardableResult public func listen(_ handler: @escaping (Type) -> Void)  -> AsyncStream<Type> {
+	private var _onValue: [(Type?) -> Void] = [(Type?) -> Void]()
+	private var _onValueOnce: [(Type?) -> Void] = [(Type?) -> Void]()
+	@discardableResult public func listen(_ handler: @escaping (Type?) -> Void)  -> AsyncStream<Type> {
 		syncQueue.sync {
 			_onValue.append(handler)
 		}
 		return self
 	}
-	@discardableResult public func listenOnce(_ handler: @escaping (Type) -> Void)  -> AsyncStream<Type> {
+	@discardableResult public func listenOnce(_ handler: @escaping (Type?) -> Void)  -> AsyncStream<Type> {
 		syncQueue.sync {
 			_onValueOnce.append(handler)
 		}
 		return self
 	}
-
-
-	private var _onAnyEvent: [() -> Void] = [() -> Void]()
-	private var _onAnyEventOnce: [() -> Void] = [() -> Void]()
-	@discardableResult public func onAnyEvent(_ handler: @escaping () -> Void)  -> AsyncStream<Type> {
-		syncQueue.sync {
-			_onAnyEvent.append(handler)
-		}
-		return self
-	}
-	@discardableResult public func onAnyEventOnce(_ handler: @escaping () -> Void)  -> AsyncStream<Type> {
-		syncQueue.sync {
-			_onAnyEventOnce.append(handler)
-		}
-		return self
-	}
-
 
 	private var _onClose: [() ->Void] = [() -> Void]()
 	private var _onCloseOnce: [() ->Void] = [() -> Void]()
@@ -114,7 +106,17 @@ public class AsyncStream<Type> {
 		guard let validSelf = self else { return }
 
 		guard !validSelf.isClosed else { throw AStreamErrors.StreamClosed }
+		
+		for handler in validSelf._onValue {
+			handler(providee)
+		}
+
+		for handler in validSelf._onValueOnce {
+			handler(providee)
+		}
+		
 		validSelf.syncQueue.sync {
+			validSelf._onValueOnce.removeAll()
 			validSelf._active = true
 			validSelf._lastValue = providee
 			if validSelf._arraySize == 0 { return }
@@ -144,7 +146,18 @@ public class AsyncStream<Type> {
 					print("streamClosed")
 					shouldStop = false
 				default:
-					fatalError("Unknown exception in stream")
+					shouldStop = true
+					for handler in self._onError {
+						handler(error)
+					}
+					
+					for handler in self._onErrorOnce {
+						handler(error)
+					}
+					self.syncQueue.sync {
+						self._error = error
+						self._onErrorOnce.removeAll()
+					}
 				}
 			}
 			
@@ -174,8 +187,19 @@ public class AsyncStream<Type> {
 	
 	private func _stop() {
 		_closed = true
+		for handler in _onClose {
+			handler()
+		}
+		
+		for handler in _onCloseOnce {
+			handler()
+		}
+		_onCloseOnce.removeAll()
+		
 		_active = false
 		agent   = nil
+		
+		
 	}
 	
 	public func stop() {

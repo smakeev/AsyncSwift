@@ -241,6 +241,112 @@ class StreamTests: XCTestCase {
 	}
 	
 	func testListeners() {
-		//@TODO:
+		let stream: AStream<Int> = asyncStream {
+			do {
+				try $0(5)
+				try $0(4)
+				try $0(3)
+				try $0(2)
+				try $0(1)
+				try $0(0)
+			}
+		}
+		
+		stream.listenOnce { value in
+			XCTAssert(value == 5)
+			stream.listenOnce { value in
+				XCTAssert(value == 4)
+				stream.listenOnce { value in
+					XCTAssert(value == 3)
+					stream.listenOnce { value in
+						XCTAssert(value == 2)
+						stream.listenOnce { value in
+							XCTAssert(value == 1)
+						}
+					}
+				}
+			}
+		}
+		
+		var count: Int = 0
+		stream.listen { value in
+			if count == 0 {XCTAssert(value == 5)}
+			if count == 1 {XCTAssert(value == 4)}
+			if count == 2 {XCTAssert(value == 3)}
+			if count == 3 {XCTAssert(value == 2)}
+			if count == 4 {XCTAssert(value == 1)}
+			if count == 5 {XCTAssert(value == 0)}
+			count += 1
+		}
+		var wasClosed = false
+
+		stream.onClose {
+			wasClosed = true
+		}
+		
+		var closedCount = 0
+		stream.onCloseOnce {
+			closedCount += 1
+			XCTAssert(closedCount == 1)
+		}
+
+		stream.onError { error in
+			XCTAssert(false)
+		}
+
+		stream.onErrorOnce { error in
+			XCTAssert(false)
+		}
+
+		streamToTestDealloc = stream
+		stream.start(autoStop: true)
+		
+		sleep(2)
+		XCTAssert(wasClosed)
+	}
+	
+	enum InternalTestErrors: Error {
+		case testError
+	}
+	
+	func testOnError() {
+		let stream: AStream<Int> = asyncStream {
+			do {
+				try $0(5)
+				try $0(4)
+				try $0(3)
+				throw InternalTestErrors.testError
+				try $0(2)
+				try $0(1)
+				try $0(0)
+			}
+		}
+		
+		streamToTestDealloc = stream
+		
+		stream.listenOnce { value in
+			XCTAssert(value == 5)
+			stream.listenOnce { value in
+				XCTAssert(value == 4)
+				stream.listenOnce { value in
+					XCTAssert(value == 3)
+					stream.listenOnce { value in
+						XCTAssert(false)
+						stream.listenOnce { value in
+							XCTAssert(false)
+						}
+					}
+				}
+			}
+		}
+		
+		var errorFound = false
+		stream.onError { error in
+			errorFound = true
+		}
+		
+		stream.start(autoStop: true)
+		sleep(2)
+		XCTAssert(errorFound)
 	}
 }
