@@ -69,7 +69,7 @@ Exactly error could be found in ```Error``` property. It has an ```Any?``` type 
   To wait for ```future1``` and ```future2``` you could use ```await``` keyword wich is just a function in this realization.
   
   ```swift
-  await(SomeFuture.wait([future1, future2]))
+  try! await(SomeFuture.wait([future1, future2]))
   ```
   
   In this case your current thread will be waiting for ```future1``` and ```future2```
@@ -103,7 +103,7 @@ Exactly error could be found in ```Error``` property. It has an ```Any?``` type 
   ```
   For such functions you may directly use ```await``` to make your code wait future to be resolved
   ```swift
-	let result = await(f1(5))
+	let result = try! await(f1(5))
   ```
   
   You may use functions to obtain futures and observe it's states.
@@ -148,7 +148,8 @@ let future = findEntryPoint().then(EntryPoint.self) { entryPoint in
  
 # ```await```
 
-```await``` is a function wich makes your current thread be waiting for future been resolbed. 
+```await``` is a function wich makes your current thread be waiting for future been resolved.
+It throws an AFutureErrors.FutureError if future has been resolved with an error.
 
 In case of using functions not returning future you may use ```await``` variants which takes arguments and function.
 it takes arguments (from 0 up to 10)* and a function not returning ```AFuture``` and produces an ```AFuture<Type>``` where ```Type``` is your function return type.
@@ -180,6 +181,11 @@ Here is error type:
   
 ## How to handle errors in future:
 
+```await``` throws in case of error in future.
+So the first way is regular exceptions handling. 
+
+But you may use ```try!``` before ```Future.wait``` due to it never thows.
+
 Take a look at this example:
 
 ```swift
@@ -193,7 +199,7 @@ func testException() {
 		return 10
 	}
 	
-	await(SomeFuture.wait([future]))
+	try! await(SomeFuture.wait([future]))
 	XCTAssert(future.resolved)
 	XCTAssert(future.hasError)
 	let error = future.error
@@ -256,7 +262,12 @@ So you could have several ```catchError```s one after another.
 
 ## Handling errors in ```await```
 
+1st variant is to use standard ```try-catch``` as ```await``` trhows in case of ```Future``` has an error.
+
 Due to ```await``` takes ```AFuture``` you may produce ```catchError``` to the future
+If ```catchError``` produces the value always you may just use ```try!```
+This is not recommended way due to ```catchError``` may also returns an error.
+Here this is done for simplicity.
 
 ```swift
 func testExceptionsInAwait() {
@@ -268,7 +279,7 @@ func testExceptionsInAwait() {
 		}
 		return 10
 	}
-	let result = await(future.catchError { error in
+	let result = try! await(future.catchError { error in
 		if let validError = error as? TestErrors {
 			switch validError {
 			case .testExcepton(let howMany): XCTAssert(howMany == 10000)
@@ -284,6 +295,6 @@ func testExceptionsInAwait() {
 }
 ```
 
-If you use ```await``` to function wich does not provide future you don't have such oportunity. 
+If you use ```await``` to function wich does not provide future you don't have such oportunity but first way ```try-catch``` is awailable.
 
 
