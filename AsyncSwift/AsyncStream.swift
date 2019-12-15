@@ -17,6 +17,24 @@ public enum AStreamErrors: Error {
 
 public class AsyncStream<Type> {
 
+	public init() {
+		syncQueue.setSpecific(key: syncQueueKey, value: ())
+	}
+
+	private var filters: [(Type?) -> Bool] = Array.init()
+	public func filter(_ filter: @escaping (Type?) -> Bool) {
+		syncQueue.sync {
+			filters.append(filter)
+		}
+	}
+	
+	private var maps: [(Type?) -> Type?] = Array.init()
+	public func map(_ map: @escaping (Type?) -> Type?) {
+		syncQueue.sync {
+			maps.append(map)
+		}
+	}
+
 	private var _lastValue: Type? = nil
 	public var lastValue: Type? {
 		get {
@@ -38,13 +56,21 @@ public class AsyncStream<Type> {
 	private var _onError: [(Error) -> Void] = [(Error) -> Void]()
 	private var _onErrorOnce: [(Error) -> Void] = [(Error) -> Void]()
 	@discardableResult public func onError(_ handler: @escaping (Error) -> Void) -> AsyncStream<Type> {
-		syncQueue.sync {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				_onError.append(handler)
+			}
+		} else {
 			_onError.append(handler)
 		}
 		return self
 	}
 	@discardableResult public func onErrorOnce(_ handler: @escaping (Error) -> Void) -> AsyncStream<Type> {
-		syncQueue.sync {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				_onErrorOnce.append(handler)
+			}
+		} else {
 			_onErrorOnce.append(handler)
 		}
 		return self
@@ -54,13 +80,22 @@ public class AsyncStream<Type> {
 	private var _onValue: [(Type?) -> Void] = [(Type?) -> Void]()
 	private var _onValueOnce: [(Type?) -> Void] = [(Type?) -> Void]()
 	@discardableResult public func listen(_ handler: @escaping (Type?) -> Void)  -> AsyncStream<Type> {
-		syncQueue.sync {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				_onValue.append(handler)
+			}
+		}
+		else {
 			_onValue.append(handler)
 		}
 		return self
 	}
 	@discardableResult public func listenOnce(_ handler: @escaping (Type?) -> Void)  -> AsyncStream<Type> {
-		syncQueue.sync {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				_onValueOnce.append(handler)
+			}
+		} else {
 			_onValueOnce.append(handler)
 		}
 		return self
@@ -69,13 +104,21 @@ public class AsyncStream<Type> {
 	private var _onClose: [() ->Void] = [() -> Void]()
 	private var _onCloseOnce: [() ->Void] = [() -> Void]()
 	@discardableResult public func onClose(_ handler: @escaping () -> Void)  -> AsyncStream<Type> {
-		syncQueue.sync {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				_onClose.append(handler)
+			}
+		} else {
 			_onClose.append(handler)
 		}
 		return self
 	}
 	@discardableResult public func onCloseOnce(_ handler: @escaping () -> Void)  -> AsyncStream<Type> {
-		syncQueue.sync {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				_onCloseOnce.append(handler)
+			}
+		} else {
 			_onCloseOnce.append(handler)
 		}
 		return self
@@ -96,37 +139,57 @@ public class AsyncStream<Type> {
 		}
 	}
 
-	private var _array: [Type] = [Type]()
-	public func toArray() -> [Type] {
+	private var _array: [Type?] = [Type?]()
+	public func toArray() -> [Type?] {
 		return _array
 	}
 	
-	fileprivate var body: (((Type) throws -> Void) throws -> Void)?
-	lazy public var  provider: (Type) throws -> Void = { [weak self] providee in
+	fileprivate var body: (((Type?) throws -> Void) throws -> Void)?
+	lazy public var  provider: (Type?) throws -> Void = { [weak self] providee in
 		guard let validSelf = self else { return }
 
 		guard !validSelf.isClosed else { throw AStreamErrors.StreamClosed }
 		
-		for handler in validSelf._onValue {
-			handler(providee)
-		}
-
-		for handler in validSelf._onValueOnce {
-			handler(providee)
+		var value: Type? = providee
+		validSelf.syncQueue.sync {
+			//check for filters
+			for filter in validSelf.filters {
+				if filter(providee) == false {
+					return
+				}
+			}
+			
+			//use maps
+			for map in validSelf.maps {
+				value = map(value)
+			}
 		}
 		
 		validSelf.syncQueue.sync {
+			for handler in validSelf._onValue {
+				handler(value)
+			}
+
+			for handler in validSelf._onValueOnce {
+				handler(value)
+			}
+		}
+	
+		
+		validSelf.syncQueue.sync {
+		
 			validSelf._onValueOnce.removeAll()
 			validSelf._active = true
-			validSelf._lastValue = providee
+			validSelf._lastValue = value
 			if validSelf._arraySize == 0 { return }
 			if validSelf._array.count == validSelf._arraySize {
 				validSelf._array.remove(at: 0)
 			}
-			validSelf._array.append(providee)
+			validSelf._array.append(value)
 		}
 	}
 	fileprivate var syncQueue: DispatchQueue = DispatchQueue(label: "AsyncStreamSyncQueue")
+	fileprivate var syncQueueKey = DispatchSpecificKey<Void> ()
 	internal var agent: AsyncStream<Type>? = nil
 
 	public func start(autoStop: Bool = false) {
@@ -147,6 +210,7 @@ public class AsyncStream<Type> {
 					shouldStop = false
 				default:
 					shouldStop = true
+
 					for handler in self._onError {
 						handler(error)
 					}
@@ -198,8 +262,6 @@ public class AsyncStream<Type> {
 		
 		_active = false
 		agent   = nil
-		
-		
 	}
 	
 	public func stop() {
@@ -207,7 +269,6 @@ public class AsyncStream<Type> {
 			_stop()
 		}
 	}
-
 }
 
 public class MutableAsyncStream<Type>: AsyncStream<Type> {

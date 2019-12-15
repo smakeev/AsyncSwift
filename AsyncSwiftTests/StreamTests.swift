@@ -343,6 +343,12 @@ class StreamTests: XCTestCase {
 		var errorFound = false
 		stream.onError { error in
 			errorFound = true
+	
+			if case InternalTestErrors.testError = error {
+				XCTAssert(true)
+			} else {
+				XCTAssert(false)
+			}
 		}
 		
 		stream.start(autoStop: true)
