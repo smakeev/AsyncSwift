@@ -248,6 +248,19 @@ class AsyncSwiftTests: XCTestCase {
 		}
 		return future
 	}
+	
+	var awaitFutureResolvedInSubOnSuccess: Bool = false
+	func testAddOnSuccessInsideInSuccess() {
+		let future = SomeFuture.delay(10)
+		future.onSuccess{ _ in
+			future.onSuccess{ _ in
+				self.awaitFutureResolvedInSubOnSuccess = true
+			}
+		}
+		
+		sleep(15)
+		XCTAssert(awaitFutureResolvedInSubOnSuccess)
+	}
 
 	func testAwaitDelay() {
 		await(delayFunc())
