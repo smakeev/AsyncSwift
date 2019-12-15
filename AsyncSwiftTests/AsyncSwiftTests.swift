@@ -129,9 +129,9 @@ class AsyncSwiftTests: XCTestCase {
 
 	func testAwaitVariantWithDirectCall() {
 		let future: AFuture<Void> = async {
-			let entryPoint = await(self.findEntryPoint())
-			let midlePoint = await(self.runFromEnryPoint(entryPoint!))
-			return await(self.finishChainWithOptinalParameter(midlePoint))!
+			let entryPoint = try! await(self.findEntryPoint())
+			let midlePoint = try! await(self.runFromEnryPoint(entryPoint!))
+			return try! await(self.finishChainWithOptinalParameter(midlePoint))!
 		}
 
 		var resolvedCalled = false
@@ -196,25 +196,25 @@ class AsyncSwiftTests: XCTestCase {
 	}
 
 	func testAsyncAwait() {
-		let entryPoint = await(findEntryPoint())
+		let entryPoint = try! await(findEntryPoint())
 		guard let validEntryPoint = entryPoint else { fatalError() /*to test exceptions*/}
-		let result = await(self.runFromEnryPoint(validEntryPoint))
+		let result = try! await(self.runFromEnryPoint(validEntryPoint))
 		XCTAssert(result!.current == 2)
 	}
 
 	func testExample() {
 		let a: AFuture<Int> = async {
-			let r1  = await(self.f0)
-			let r2  = await(r1!, self.f1)
-			let r3  = await(r1!, r2!, self.f2)
-			let r4  = await(r1!, r2!, r3!, self.f3)
-			let r5  = await(r1!, r2!, r3!, r4!, self.f4)
-			let r6  = await(r1!, r2!, r3!, r4!, r5!, self.f5)
-			let r7  = await(r1!, r2!, r3!, r4!, r5!, r6!, self.f6)
-			let r8  = await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, self.f7)
-			let r9  = await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, r8!, self.f8)
-			let r10 = await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, r8!, r9!, self.f9)
-			let r11 = await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, r8!, r9!, r10!, self.f10)
+			let r1  = try! await(self.f0)
+			let r2  = try! await(r1!, self.f1)
+			let r3  = try! await(r1!, r2!, self.f2)
+			let r4  = try! await(r1!, r2!, r3!, self.f3)
+			let r5  = try! await(r1!, r2!, r3!, r4!, self.f4)
+			let r6  = try! await(r1!, r2!, r3!, r4!, r5!, self.f5)
+			let r7  = try! await(r1!, r2!, r3!, r4!, r5!, r6!, self.f6)
+			let r8  = try! await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, self.f7)
+			let r9  = try! await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, r8!, self.f8)
+			let r10 = try! await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, r8!, r9!, self.f9)
+			let r11 = try! await(r1!, r2!, r3!, r4!, r5!, r6!, r7!, r8!, r9!, r10!, self.f10)
 
 			return r11!
 		}
@@ -263,13 +263,13 @@ class AsyncSwiftTests: XCTestCase {
 	}
 
 	func testAwaitDelay() {
-		await(delayFunc())
+		try! await(delayFunc())
 		XCTAssert(awaitFutureResolved)
 	}
 
 	var awaitedFutureResolved: Bool = false
 	func testAwaitFutureDelay() {
-		await(SomeFuture.delay(3).onSuccess { _ in
+		try! await(SomeFuture.delay(3).onSuccess { _ in
 			self.awaitedFutureResolved = true
 		})
 
@@ -285,7 +285,7 @@ class AsyncSwiftTests: XCTestCase {
 			}
 			return 10
 		}
-		await(SomeFuture.wait([future1, future2, future3]))
+		try! await(SomeFuture.wait([future1, future2, future3]))
 		XCTAssert(future1.resolved)
 		XCTAssert(future2.resolved)
 		XCTAssert(future3.resolved)
@@ -305,7 +305,7 @@ class AsyncSwiftTests: XCTestCase {
 			return 10
 		}
 		
-		await(SomeFuture.wait([future]))
+		try! await(SomeFuture.wait([future]))
 		XCTAssert(future.resolved)
 		XCTAssert(future.hasError)
 		let error = future.error
@@ -327,7 +327,7 @@ class AsyncSwiftTests: XCTestCase {
 			}
 			return 10
 		}
-		let result = await(future.catchError { error in
+		let result = try! await(future.catchError { error in
 			if let validError = error as? TestErrors {
 				switch validError {
 				case .testExcepton(let howMany): XCTAssert(howMany == 10000)
@@ -348,7 +348,7 @@ class AsyncSwiftTests: XCTestCase {
 			}
 			return 10
 		}
-		let result = await(future.catchError { error in
+		let result = try! await(future.catchError { error in
 			if let validError = error as? TestErrors {
 				switch validError {
 				case .testExcepton(let howMany): XCTAssert(howMany == 10000)
@@ -372,7 +372,7 @@ class AsyncSwiftTests: XCTestCase {
 			}
 			return 10
 		}
-		let result = await(future.catchError { error in
+		let result = try! await(future.catchError { error in
 			if let validError = error as? TestErrors {
 				switch validError {
 				case .testExcepton(let howMany): XCTAssert(howMany == 10000)
@@ -421,7 +421,7 @@ class AsyncSwiftTests: XCTestCase {
 			wasInAlways = true
 		}
 
-		let result = await(future)
+		let result = try! await(future)
 		XCTAssert(result == "10000")
 		XCTAssert(wasInAlways)
 		XCTAssert(!gotThenBlock)
