@@ -355,4 +355,38 @@ class StreamTests: XCTestCase {
 		sleep(2)
 		XCTAssert(errorFound)
 	}
+	
+	func testFilterAndMap() {
+			let stream: AStream<Int> = asyncStream {
+					do {
+						try $0(5)
+						try $0(4)
+						try $0(3)
+						try $0(2)
+						try $0(1)
+						try $0(0)
+					}
+				}
+				
+				streamToTestDealloc = stream
+				
+				stream.arraySize = 6
+				
+				stream.filter {
+					guard let value = $0 else { return false }
+					return value % 2 == 0
+				}
+				
+				stream.map {
+					guard let value = $0 else { return 0 }
+					return value * 2
+				}
+				stream.start(autoStop: true)
+				
+				
+				sleep(2)
+				let array = stream.toArray()
+				XCTAssert(array == [8, 4, 0])
+				
+	}
 }

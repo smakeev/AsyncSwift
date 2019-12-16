@@ -427,5 +427,4 @@ class AsyncSwiftTests: XCTestCase {
 		XCTAssert(!gotThenBlock)
 		XCTAssert(!wasInThen)
 	}
-
 }

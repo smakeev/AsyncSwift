@@ -151,6 +151,7 @@ public class AsyncStream<Type> {
 		guard !validSelf.isClosed else { throw AStreamErrors.StreamClosed }
 		
 		var value: Type? = providee
+		
 		validSelf.syncQueue.sync {
 			//check for filters
 			for filter in validSelf.filters {
@@ -163,9 +164,7 @@ public class AsyncStream<Type> {
 			for map in validSelf.maps {
 				value = map(value)
 			}
-		}
 		
-		validSelf.syncQueue.sync {
 			for handler in validSelf._onValue {
 				handler(value)
 			}
@@ -173,10 +172,6 @@ public class AsyncStream<Type> {
 			for handler in validSelf._onValueOnce {
 				handler(value)
 			}
-		}
-	
-		
-		validSelf.syncQueue.sync {
 		
 			validSelf._onValueOnce.removeAll()
 			validSelf._active = true
