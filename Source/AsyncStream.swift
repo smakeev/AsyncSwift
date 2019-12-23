@@ -173,6 +173,10 @@ public class AsyncStream<Type> {
 				handler(value)
 			}
 		
+			for nextStream in validSelf.nextStreams {
+				try? nextStream.provider(value)
+			}
+		
 			validSelf._onValueOnce.removeAll()
 			validSelf._active = true
 			validSelf._lastValue = value
@@ -262,6 +266,25 @@ public class AsyncStream<Type> {
 	public func stop() {
 		syncQueue.sync {
 			_stop()
+		}
+	}
+	
+	public func listenTo(_ stream: AsyncStream<Type>) {
+		stream.nextStream(self)
+	}
+	
+	private var nextStreams = Array<AsyncStream<Type>>.init()
+	public func nextStream(_ stream: AsyncStream<Type>) {
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				if (nextStreams.filter { $0 === stream }.count == 0) {
+					self.nextStreams.append(stream)
+				}
+			}
+		} else {
+			if (nextStreams.filter { $0 === stream }.count == 0) {
+				self.nextStreams.append(stream)
+			}
 		}
 	}
 }
