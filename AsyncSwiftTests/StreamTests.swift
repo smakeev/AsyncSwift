@@ -14,9 +14,11 @@ import XCTest
 class StreamTests: XCTestCase {
 
 	weak var streamToTestDealloc: AStream<Int>? = nil
-
+	weak var stream1ToTestDealloc: AStream<Int>? = nil
+	
 	override func tearDown() {
 		XCTAssert(streamToTestDealloc == nil)
+		XCTAssert(stream1ToTestDealloc == nil)
 	}
 
 	func testStreamCreate() {
@@ -387,6 +389,60 @@ class StreamTests: XCTestCase {
 				sleep(2)
 				let array = stream.toArray()
 				XCTAssert(array == [8, 4, 0])
-				
+	}
+	
+	func testStreamsChain() {
+			let stream: AStream<Int> = asyncStream {
+				do {
+					try $0(5)
+					try $0(4)
+					try $0(3)
+					try $0(2)
+					try $0(1)
+					try $0(0)
+				}
+			}
+			
+			streamToTestDealloc = stream
+			
+			let nextStream = AStream<Int>()
+			stream1ToTestDealloc = nextStream
+			
+			stream.nextStream(nextStream)
+			nextStream.arraySize = 6
+			
+			
+			stream.start(autoStop: true)
+			
+			sleep(2)
+			let array = nextStream.toArray()
+			XCTAssert(array == [5, 4, 3, 2 ,1, 0])
+	}
+	
+	func testStreamsChainViaListenTo() {
+	let stream: AStream<Int> = asyncStream {
+			do {
+				try $0(5)
+				try $0(4)
+				try $0(3)
+				try $0(2)
+				try $0(1)
+				try $0(0)
+			}
+		}
+		
+		streamToTestDealloc = stream
+		
+		let nextStream = AStream<Int>()
+		stream1ToTestDealloc = nextStream
+		
+		nextStream.arraySize = 6
+		nextStream.listenTo(stream)
+		
+		stream.start(autoStop: true)
+		
+		sleep(2)
+		let array = nextStream.toArray()
+		XCTAssert(array == [5, 4, 3, 2 ,1, 0])
 	}
 }
