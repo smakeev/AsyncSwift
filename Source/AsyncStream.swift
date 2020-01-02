@@ -11,11 +11,20 @@ import Foundation
 public typealias AStream  = AsyncStream
 public typealias MAStream = MutableAsyncStream
 
+
+public protocol PublicStreamProtocol {
+
+}
+
+internal protocol InternalStreamProtocol: PublicStreamProtocol {
+ func apply();
+}
+
 public enum AStreamErrors: Error {
 	case StreamClosed
 }
 
-public class AsyncStream<Type> {
+public class AsyncStream<Type>: PublicStreamProtocol {
 
 	public init() {
 		syncQueue.setSpecific(key: syncQueueKey, value: ())
@@ -35,7 +44,7 @@ public class AsyncStream<Type> {
 		}
 	}
 
-	private var _lastValue: Type? = nil
+	fileprivate var _lastValue: Type? = nil
 	public var lastValue: Type? {
 		get {
 			return syncQueue.sync {
@@ -176,10 +185,15 @@ public class AsyncStream<Type> {
 			for nextStream in validSelf.nextStreams {
 				try? nextStream.provider(value)
 			}
-		
+			
 			validSelf._onValueOnce.removeAll()
 			validSelf._active = true
 			validSelf._lastValue = value
+			
+			for bridge in validSelf.bridges {
+				bridge.apply()
+			}
+			
 			if validSelf._arraySize == 0 { return }
 			if validSelf._array.count == validSelf._arraySize {
 				validSelf._array.remove(at: 0)
@@ -287,6 +301,27 @@ public class AsyncStream<Type> {
 			}
 		}
 	}
+	
+	private var bridges = [InternalStreamProtocol]()
+	@discardableResult public func bridgeTo<Type1>(_ stream: PublicStreamProtocol, withRule rule: @escaping (Type) -> Type1) -> AStream<Type> {
+		let bridge = StreamBridge<Type, Type1>(with: rule)
+		bridge.streamFrom = self
+		bridge.streamTo   = stream as? AsyncStream<Type1>
+		if DispatchQueue.getSpecific(key: self.syncQueueKey) == nil {
+			syncQueue.sync {
+				bridges.append(bridge)
+			}
+		} else {
+			bridges.append(bridge)
+		}
+		return self
+	}
+	
+	public func bridgeFrom<Type1>(_ stream: PublicStreamProtocol, withRule rule: @escaping (Type1) -> Type) -> AStream<Type> {
+		guard let validStream = stream as? AStream<Type1> else { return self }
+		validStream.bridgeTo(self, withRule: rule)
+		return self
+	}
 }
 
 public class MutableAsyncStream<Type>: AsyncStream<Type> {
@@ -350,4 +385,22 @@ public class MutableAsyncStream<Type>: AsyncStream<Type> {
 			start(autoStop: true)
 		}
 	}
+}
+
+internal class StreamBridge<Type1, Type2>: InternalStreamProtocol {
+	
+	public func apply() {
+		guard let streamFrom = streamFrom        else { return }
+		guard let  input = streamFrom._lastValue else { return }
+		guard let output = rule?(input)           else { return }
+		try? streamTo?.provider(output)
+	}
+	
+	public private(set) var rule: ((Type1) -> Type2)?
+	public init(with rule: @escaping (Type1) -> Type2) {
+		self.rule = rule
+	}
+	
+	public var streamFrom: AStream<Type1>?
+	public var streamTo:   AStream<Type2>?
 }
