@@ -15,10 +15,13 @@ class StreamTests: XCTestCase {
 
 	weak var streamToTestDealloc: AStream<Int>? = nil
 	weak var stream1ToTestDealloc: AStream<Int>? = nil
+	weak var stream2ToTestDealloc: AStream<String>? = nil
+
 	
 	override func tearDown() {
 		XCTAssert(streamToTestDealloc == nil)
 		XCTAssert(stream1ToTestDealloc == nil)
+		XCTAssert(stream2ToTestDealloc == nil)
 	}
 
 	func testStreamCreate() {
@@ -444,5 +447,95 @@ class StreamTests: XCTestCase {
 		sleep(2)
 		let array = nextStream.toArray()
 		XCTAssert(array == [5, 4, 3, 2 ,1, 0])
+	}
+	
+	func testBridges() {
+		let stream: AStream<Int> = asyncStream {
+			do {
+				try $0(5)
+				try $0(4)
+				try $0(3)
+				try $0(2)
+				try $0(1)
+				try $0(0)
+			}
+		}
+		
+		let stream2 = AStream<String>()
+		streamToTestDealloc  = stream
+		stream2ToTestDealloc = stream2
+		stream.bridgeTo(stream2, withRule: { (value) -> String in
+			if value == 5 {
+				return "five"
+			}
+			if value == 4 {
+				return "four"
+			}
+			if value == 3 {
+				return "three"
+			}
+			if value == 2 {
+				return "two"
+			}
+			if value == 1 {
+				return "one"
+			}
+			if value == 0 {
+				return "zero"
+			}
+			
+			return "wrong"
+		})
+		stream2.arraySize = 10
+		stream.start(autoStop: true)
+		
+		sleep(2)
+		
+		XCTAssert(stream2.toArray() == [Optional("five"), Optional("four"), Optional("three"), Optional("two"), Optional("one"), Optional("zero")])
+	}
+	
+	func testBridgesFromBAck() {
+		let stream: AStream<Int> = asyncStream {
+			do {
+				try $0(5)
+				try $0(4)
+				try $0(3)
+				try $0(2)
+				try $0(1)
+				try $0(0)
+			}
+		}
+		
+		let stream2 = AStream<String>()
+		streamToTestDealloc  = stream
+		stream2ToTestDealloc = stream2
+		stream2.bridgeFrom(stream, withRule: { (value: Int) -> String in
+			if value == 5 {
+				return "five"
+			}
+			if value == 4 {
+				return "four"
+			}
+			if value == 3 {
+				return "three"
+			}
+			if value == 2 {
+				return "two"
+			}
+			if value == 1 {
+				return "one"
+			}
+			if value == 0 {
+				return "zero"
+			}
+			
+			return "wrong"
+		})
+		stream2.arraySize = 10
+		stream.start(autoStop: true)
+		
+		sleep(2)
+		
+		XCTAssert(stream2.toArray() == [Optional("five"), Optional("four"), Optional("three"), Optional("two"), Optional("one"), Optional("zero")])
 	}
 }

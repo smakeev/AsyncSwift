@@ -317,7 +317,7 @@ public class AsyncStream<Type>: PublicStreamProtocol {
 		return self
 	}
 	
-	public func bridgeFrom<Type1>(_ stream: PublicStreamProtocol, withRule rule: @escaping (Type1) -> Type) -> AStream<Type> {
+	@discardableResult public func bridgeFrom<Type1>(_ stream: PublicStreamProtocol, withRule rule: @escaping (Type1) -> Type) -> AStream<Type> {
 		guard let validStream = stream as? AStream<Type1> else { return self }
 		validStream.bridgeTo(self, withRule: rule)
 		return self
@@ -401,6 +401,6 @@ internal class StreamBridge<Type1, Type2>: InternalStreamProtocol {
 		self.rule = rule
 	}
 	
-	public var streamFrom: AStream<Type1>?
-	public var streamTo:   AStream<Type2>?
+	public weak var streamFrom: AStream<Type1>?
+	public weak var streamTo:   AStream<Type2>?
 }
