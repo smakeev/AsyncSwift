@@ -297,4 +297,8 @@ func testExceptionsInAwait() {
 
 If you use ```await``` to function wich does not provide future you don't have such oportunity but first way ```try-catch``` is awailable.
 
+## Streams and Async observable properties 
+
+Take a look at `AsyncObservablesTests` and `StreamTests` for examples.
+
 
